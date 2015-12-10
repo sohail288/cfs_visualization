@@ -1,0 +1,5 @@
+cfs/static/bower_components
+
+*.pyc
+
+node_modules

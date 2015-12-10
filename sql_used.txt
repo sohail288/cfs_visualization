@@ -1,0 +1,40 @@
+/* used for comparisons
+SELECT                       
+    CASE WHEN HAZMAT = 'P' OR HAZMAT = 'H' THEN 'Hazardous'
+    WHEN HAZMAT = 'N' THEN 'Not_Hazardous'
+    ELSE 'n/a' END as Hazmat,
+    COUNT(1),
+    AVG(shipmt_wght) as avg_shipment_wght,
+    AVG(shipmt_value) as avg_shipment_value
+    FROM sohail_khan.cfs_2012_pumf_first_50k
+    GROUP BY 1
+
+*/
+
+
+/* TOP 5 in each state
+SELECT states.name as state_name, *
+  FROM (
+        SELECT *, RANK() OVER (PARTITION BY orig_state ORDER BY shipmt_value DESC) as rank
+        FROM sohail_khan.cfs_2012_pumf_first_50k
+        ) cfs
+  JOIN sohail_khan.fips_states states
+  ON states.numeric_code = cfs.orig_state
+  WHERE RANK < 5
+*/
+
+/*
+SELECT *
+  FROM
+  (SELECT states.name as state_name, *
+  FROM (
+        SELECT *, RANK() OVER (PARTITION BY orig_state ORDER BY shipmt_value DESC) as rank
+        FROM sohail_khan.cfs_2012_pumf_first_50k
+        ) cfs
+  JOIN sohail_khan.fips_states states
+  ON states.numeric_code = cfs.orig_state
+  WHERE RANK <= 5
+  ) sub
+  JOIN sohail_khan.state_average_lattitude lats
+  ON lats.state = sub.alpha_code
+*/
