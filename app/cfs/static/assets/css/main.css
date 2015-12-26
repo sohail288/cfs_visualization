@@ -1,6 +1,61 @@
 
+/* map stuff */
 
-
-.Chart {
+.map {
     border: 2px solid black;
 }
+
+.state {
+    fill: white;
+}
+
+.USK {
+    fill: none;
+    stroke: black;
+}
+
+.USH {
+    fill: yellow;
+}
+
+.USB {
+    fill: none;
+}
+
+path.states{
+     stroke-width: 1;
+     stroke: black;
+     fill: none;
+}
+
+path.state-boundary {
+    stroke: black;
+    fill: none;
+}
+
+
+path.graticule {
+     fill: none;
+     stroke-width: 1;
+     stroke: black;
+}
+
+path.graticule.outline {
+     stroke: black;
+}
+
+path.exterior-borders {
+    stroke:black;
+    fill: none;
+}
+
+.state-label {
+    fill: blue;
+}
+
+path.state-borders {
+    fill: none;
+    stroke: black;
+}
+
+

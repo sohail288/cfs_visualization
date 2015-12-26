@@ -6,7 +6,6 @@ var gulp = require('gulp'),
     browserify = require('gulp-browserify'),
     size = require('gulp-size'),
     concat = require('gulp-concat'),
-    source = require('vinyl-source-stream'),
     reactify = require('reactify'),
     clean = require('gulp-clean');
 

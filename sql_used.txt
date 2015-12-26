@@ -1,4 +1,17 @@
-/* used for comparisons
+ELECT orig_state.name as origin, dest_state.name as destination, sub.counts, ROUND(sub.avg_value) as avg_value
+FROM (
+  SELECT ORIG_STATE, DEST_STATE, COUNT(1) AS COUNTS, AVG(shipmt_value) as avg_value
+    FROM sohail_khan.cfs_2012_pumf_first_50k 
+    GROUP BY ORIG_STATE, DEST_STATE
+    ORDER BY 1,2, COUNTS DESC
+  ) sub 
+
+JOIN sohail_khan.fips_states orig_state
+ON sub.orig_state=orig_state.numeric_code
+
+JOIN sohail_khan.fips_states dest_state
+ON sub.dest_state=dest_state.numeric_code
+
 SELECT                       
     CASE WHEN HAZMAT = 'P' OR HAZMAT = 'H' THEN 'Hazardous'
     WHEN HAZMAT = 'N' THEN 'Not_Hazardous'
@@ -37,4 +50,56 @@ SELECT *
   ) sub
   JOIN sohail_khan.state_average_lattitude lats
   ON lats.state = sub.alpha_code
+*/
+
+/* gets intracity shipments
+SELECT alpha_code, sub.intracity, sub.counts
+
+FROM sohail_khan.fips_states states
+JOIN 
+  (SELECT ORIG_STATE,
+        CASE
+        WHEN ORIG_STATE = DEST_STATE THEN 1
+        ELSE 0 END as "intracity",
+        COUNT(1) as counts
+  
+      FROM sohail_khan.cfs_2012_pumf_first_50k
+      GROUP BY intracity, ORIG_STATE
+  ) sub
+  
+  ON sub.orig_state = states.numeric_code
+  ORDER BY 3 desc,1,2;
+
+
+
+*/
+
+/* An example of joining a table in two different ways
+SELECT orig.alpha_code as origin, dest.alpha_code as destination,transactions.orig_ma,  COUNT(1) as counts
+  FROM sohail_khan.cfs_2012_pumf_first_50k transactions
+  JOIN sohail_khan.fips_states dest
+  ON transactions.dest_state = dest.numeric_code
+  JOIN sohail_khan.fips_states orig
+  ON transactions.orig_state = orig.numeric_code
+  WHERE (dest.alpha_code = 'CA' and orig.alpha_code='TX')
+    OR (dest.alpha_code = 'CA' and orig.alpha_code='OR')
+  GROUP BY orig.alpha_code, dest.alpha_code, transactions.orig_ma
+LIMIT 100
+*/
+
+/* Join by state and get counts of transactions
+SELECT orig_state.name as origin, dest_state.name as destination, sub.counts, ROUND(sub.avg_value) as avg_value
+FROM (
+  SELECT ORIG_STATE, DEST_STATE, COUNT(1) AS COUNTS, AVG(shipmt_value) as avg_value
+    FROM sohail_khan.cfs_2012_pumf_first_50k 
+    GROUP BY ORIG_STATE, DEST_STATE
+    ORDER BY 1,2, COUNTS DESC
+  ) sub 
+
+JOIN sohail_khan.fips_states orig_state
+ON sub.orig_state=orig_state.numeric_code
+
+JOIN sohail_khan.fips_states dest_state
+ON sub.dest_state=dest_state.numeric_code
+
 */

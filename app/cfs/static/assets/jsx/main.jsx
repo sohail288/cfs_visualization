@@ -9,8 +9,7 @@ var App = require('./app.jsx');
 ReactDOM.render(
     <div>
         <h1> CFS APP </h1>
-        <App get_data='/'
-            />
+        <App get_data_url='/states/'/>
     </div>,
     document.getElementById('react-main')
 );
