@@ -3,6 +3,9 @@ TOPO=topojson
 DEST=cfs/static/assets/geo
 state_lines_url="http://www.naturalearthdata.com/http//www.naturalearthdata.com/download/110m/cultural/ne_110m_admin_1_states_provinces.zip"
 
+###########################################
+# Shapefiles
+#############################################
 state_base=ne_110m_admin_1_states_provinces
 state_file=$(patsubst %, %.zip, $(state_base))
 state_shp=$(subst zip,shp, $(state_file))
@@ -20,10 +23,20 @@ subunits_url="http://www.naturalearthdata.com/http//www.naturalearthdata.com/dow
 subunits_file=$(patsubst %, %.zip, $(subunits_base))
 subunits_shp=$(subst zip,shp, $(subunits_file))
 
+############################################
+############################################
+
+####################
+# AWS DEPLOY SETTINGS
+####################
+EC2_AMI=ami-d5ea86b5
 
 
 
-all: clean cfs/static/assets/geo/$(state_base).json cfs/static/assets/geo/$(subunits_base).json
+
+
+
+usa.json: clean cfs/static/assets/geo/$(state_base).json cfs/static/assets/geo/$(subunits_base).json
 	rm -f $(DEST)/usa.json
 	$(TOPO) -o $(DEST)/usa.json --id-property SU_A3 --properties name=NAME \
 														-p state-name=name  \
@@ -57,6 +70,12 @@ cfs/static/assets/geo/$(subunits_base).json:
 	rm $(DEST)/subunits.json
 	$(OGR) -f GeoJSON -where "ADM0_A3 IN ('USA')" $(DEST)/subunits.json \
 			$(subunits_base).shp
+
+deploy:
+	@echo Deploying app
+	@echo EC2: $(EC2_AMI)
+	@echo 
+
 
 
 clean:

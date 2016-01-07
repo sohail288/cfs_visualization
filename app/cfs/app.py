@@ -12,44 +12,17 @@ from flask.ext.script     import Manager
 from flask.ext.bootstrap  import Bootstrap
 from flask.ext.sqlalchemy import SQLAlchemy
 
-import sqlalchemy
-from sqlalchemy.dialects.postgresql import psycopg2
-from sqlalchemy import create_engine, select, case 
-from sqlalchemy import Table, Column, Integer, String, MetaData, ForeignKey
-from sqlalchemy.sql import text, and_, or_, desc
-
 import json
-import queries
 
 import pandas as pd
 
-QUERY_LIMIT = QL = 10
+import queries
+from db import ENGINE, get_rows
+
+QUERY_LIMIT = QL = 100
 
 app = Flask(__name__)
 
-username = 'TestUser'
-password = 'TestPassword'
-address  = 'cfsdb.cs4yyoqmq4gl.us-west-1.rds.amazonaws.com'
-port     =  5432
-db_name  = 'cfsdb'
-
-DATABASE_URI = 'postgresql+psycopg2://{username}:{password}@{add}:{port}/{db_name}'.format(
-    username=username,
-    password=password,
-    add=address,
-    port=port,
-    db_name=db_name)
-
-ENGINE =  create_engine(DATABASE_URI)
-META = MetaData()
-META.reflect(ENGINE)
-
-Transactions  = META.tables['transactions']
-SCTG          = META.tables['sctg']
-TransportMode = META.tables['transport_mode']
-States        = META.tables['FIPS_States']
-CFS_Areas     = META.tables['cfs_areas']
-State_LatLon  = META.tables['state_latlon']
 
 app.config.from_object(__name__)
 app.config.from_envvar("CFS_SETTINGS", silent=True)
@@ -60,8 +33,6 @@ bootstrap = Bootstrap(app)
 manager = Manager(app)
 
 
-get_row = lambda row: (dict(row.items()))
-get_rows = lambda row_list: map(get_row, row_list)
 
 def connect_db():
     db.connect()
@@ -82,8 +53,7 @@ app.add_url_rule('/usa-map-data', 'root',
 
 @app.route('/')
 def index():
-    data = g.db.execute(select([Transactions]).limit(25)).fetchall()
-    return render_template('index.html', data = data)
+    return render_template('index.html')
 
 @app.route('/test-data', methods=['GET'])
 def test_data():
@@ -102,7 +72,7 @@ def transactionBetweenStates(orig_state, dest_state):
         orig_code=orig_state, 
         dest_code=dest_state)
 
-    data = list(get_rows(g.db.execute(q).fetchall()))
+    data = list(get_rows(g.db.execute(q.limit(QL)).fetchall()))
     return Response(json.dumps(data, indent=2), mimetype='application/json',
                     headers={'Cache-Control': 'no-cache'})
 
@@ -110,11 +80,8 @@ def transactionBetweenStates(orig_state, dest_state):
 def transactionsFromState(orig_state):
     """ Get Top N Transactions For State """
     q = queries.transactionsFromState.params(orig_code=orig_state)
-   
 
-    
-
-    data = list(get_rows(g.db.execute(q).fetchall()))
+    data = list(get_rows(g.db.execute(q.limit(QL)).fetchall()))
     return Response(json.dumps(data, indent=2), mimetype='application/json',
                     headers={'Cache-Control': 'no-cache'})
 
@@ -124,13 +91,92 @@ def  get_stats(orig_state, dest_state, info):
                                                  dest_code=dest_state)
 
     try:
-        data = pd.read_sql_query(q, ENGINE).groupby(['orig_alpha_code', 'dest_alpha_code'])[info].describe()
+        data = pd.read_sql_query(q.limit(QL), ENGINE).groupby(['orig_alpha_code', 'dest_alpha_code'])[info].describe()
     except Exception as e:
         return Response(str(e) + " is not a correct column to groupby")
 
     return Response(data.to_json(orient="records"), mimetype='application/json',
                     headers={'Cache-Control': 'no-cache'})
+
+@app.route('/states/<orig_state>/<dest_state>/info/<info>/values')
+def get_values(orig_state, dest_state, info):
+    pass
+
+
+
+@app.route('/states/<orig_state>/<dest_state>/info/<info>/break_down')
+def get_breakdown(orig_state, dest_state, info):
+    column_code = queries.code_translate[info]
+    q = queries.transactionsBetweenStates.params(orig_code=orig_state,
+                                                 dest_code=dest_state)
+    a = queries.getAux(info)
     
+    try:
+        data = pd.DataFrame({'counts': pd.read_sql_query(q.limit(QL), ENGINE).groupby(info)[info].count()})
+        appendix = pd.read_sql_query(a, ENGINE)
+        if data.index.dtype != appendix[column_code].dtype:
+            appendix[column_code] = appendix[column_code].astype(str)
+
+        m = pd.merge(appendix, data, left_on=column_code, right_index=True)
+        
+        # convert all numeric-code columns to be named code for easier manip
+        m = m.rename(columns={column_code:'code'})
+
+        # for some reason the mode table has a diff name for description column
+        if info == 'MODE':
+            m = m.rename(columns={'Mode Description':'Description'})
+
+    except Exception as e:
+        return Response(str(e) + " is not a correct column to groupby")
+    
+    return Response(m.to_json(orient="records"),
+                    mimetype='application/json',
+                    headers={'Cache-Control': 'no-cache'})
+
+
+@app.route('/states/<orig_state>/info/<info>/break_down')
+def get_breakdown_from_state(orig_state, info):
+    column_code = queries.code_translate[info]
+    q = queries.transactionsFromState.params(orig_code=orig_state)
+    a = queries.getAux(info)
+
+    try:
+        data = pd.DataFrame({'counts': pd.read_sql_query(q.limit(QL), ENGINE).groupby(info)[info].count()})
+        appendix = pd.read_sql_query(a, ENGINE)
+        if data.index.dtype != appendix[column_code].dtype:
+            appendix[column_code] = appendix[column_code].astype(str)
+        
+        m = pd.merge(appendix, data, left_on=column_code, right_index=True)
+        m = m.rename(columns={column_code:'code'})
+        if info == 'MODE':
+            m = m.rename(columns={'Mode Description': 'Description'})
+    except Exception as e:
+        return Response(str(e))
+
+    return Response(m.to_json(orient="records"),
+                    mimetype='application/json',
+                    headers={'Cache-Control': 'no-cache'})
+
+
+
+@app.route('/appendix/<name>')
+def get_sctg_info(name):
+    s = { 'sctg': queries.SCTG,
+          'mode': queries.TransportMode,
+          'naics': queries.NAICS
+        }.get(name, None)
+
+    if s is not None:
+    
+        data = list(get_rows(g.db.execute(
+            queries.select([s])).fetchall()))
+
+        return Response(json.dumps(data, indent=2), 
+                        mimetype='application/json',
+                        headers={'Cache-Control': 'no-cache'})
+    return Response("table does not exist")
+
+                    
 
 
 if __name__ == '__main__':

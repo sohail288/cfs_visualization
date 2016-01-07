@@ -30,7 +30,7 @@ d3Chart._drawMap = function(el, props, state, svg) {
             .data(topojson.feature(map_json, map_json.objects.states)
                    .features)
             .enter().append("path")
-            .attr("id", (d) => d.properties['state-name'])
+            .attr("id", (d) => d.properties['postal'])
             .attr("class", "state")
             .attr("d", path);
 
@@ -69,10 +69,20 @@ d3Chart._drawMap = function(el, props, state, svg) {
 }
 
 d3Chart.update = function(el, props, state) {
-    console.log("updating with new data");
-    console.log(state.data);
+    //console.log(state);
     d3Chart._addTransactionLines(el, props, state);
+    d3Chart._highlightStates(el, state);
 }    
+
+d3Chart.clear = function() {
+    // remove state selects
+    d3.selectAll(".state-select").classed({"state-select": false});
+
+    // remove transaction lines
+    d3.selectAll(".transaction-lines").remove();
+    
+
+}
 
 d3Chart._addClickableState = function(el, props) {
     var sel = d3.select(el).select('svg').selectAll(".state");
@@ -82,8 +92,18 @@ d3Chart._addClickableState = function(el, props) {
         d3Chart.changeCurrentState(props.handle_state, new_state);
     
     }); 
+};
+
+d3Chart._highlightStates = function(el, state) {
+    //console.log(state.currentState);
+    d3.selectAll(".state-select").classed({"state-select": false});
+    state.currentState.forEach (function(d) {
+        d3.select("#"+d)
+          .classed({"state-select": true})
+    });
 }
 
+// this works in leui of an event emitter
 d3Chart.changeCurrentState = function(handleChange, new_state) {
     handleChange(new_state); 
 }
@@ -102,10 +122,28 @@ d3Chart._addTransactionLines = function(el, props, state) {
         return [d.dest_lon, d.dest_lat];
     }
 
+    var getTransactions = function (data) {
+        var curData = data; 
+        return (d)=> curData.filter((d2) => d.ORIG_STATE==d2.ORIG_STATE && d.DEST_STATE == d2.DEST_STATE).length;
+    };
+
+    var domain = d3.extent(state.data, getTransactions(state.data));
+
+
+    var lineWidthScale = d3.scale.linear().range([1,10]).domain(domain);
+
+    var sameStateTransactions = state.data.filter(
+                        (d)=> d.dest_alpha_code === d.orig_alpha_code);
+    var fromStateTransactions = state.data.filter(
+                        (d)=> d.dest_alpha_code !== d.orig_alpha_code);
+
 
     var enter = sel
-        .data(state.data)
+        .data(fromStateTransactions)
         .enter();
+
+    var getTransactions_ = getTransactions(fromStateTransactions);
+
 
     enter.append("line")
          .attr('class', 'transaction-lines')
@@ -113,10 +151,24 @@ d3Chart._addTransactionLines = function(el, props, state) {
          .attr('y1', (d)=> props.projection(getPointA(d))[1])
         .attr('x2', (d)=> props.projection(getPointB(d))[0])
         .attr('y2', (d)=> props.projection(getPointB(d))[1])
-        .style('stroke', 'red')
-        .style('stroke-width', 2);
+        .style('stroke', 'green')
+        .style('stroke-width', (d)=> lineWidthScale(getTransactions_(d)));
 
-    sel.data(state.data).exit().remove();
+
+    // add circles for same state transactions
+    sel
+      .data(sameStateTransactions)
+    .enter()
+      .append("circle")
+        .attr('class', 'transaction-lines')
+                                                        // this is for jitter
+        .attr('cx', (d)=> props.projection(getPointA(d))[0]+Math.random()*10)
+        .attr('cy', (d)=> props.projection(getPointA(d))[1]+Math.random()*10)
+        .attr('r', 3)
+        .style('stroke', 'yellow')
+        .style('fill', 'red');
+       
+
 
 };
 

@@ -51,6 +51,7 @@ module.exports = React.createClass({
   },
 
   render: function() {
+    console.log("rendering map");
     return (
       <div className="Map"></div>
     );

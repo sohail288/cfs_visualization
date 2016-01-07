@@ -10,4 +10,7 @@ app/**/*.pyc
 
 app/node_modules
 
+*.pem
 .ipynb_checkpoints
+
+.DS_Store
