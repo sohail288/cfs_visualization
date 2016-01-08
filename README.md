@@ -1,5 +1,8 @@
 # This project is an exploration of the CFS Dataset
 
-### I am interested in whether or not there are any surprising correlations
-### between shipments and destinations
-
+I'm using AWS RDS to host the dataset.  An EC2 server is provisioned to run the flask app.  
+The Database connection is managed through SQLAlchemy.  
+I have recipes that automate the process of extracting the data from its excel origin, converting the data to csv and then 
+uploading that data to the RDS server via an EC2 server and directly through PANDAS and an SQLAlchemy connection.
+The client app is composed of React components.  
+The visualization is generated through D3.js.  
