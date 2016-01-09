@@ -14,3 +14,7 @@ app/node_modules
 .ipynb_checkpoints
 
 .DS_Store
+
+
+
+cfs/static/assets/js/main.js
