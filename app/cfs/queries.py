@@ -66,7 +66,7 @@ dest = state_latlon_joined.alias("dest")
 
 
 transactionsFromState = (select([Transactions_Joined])
-                         .where(Transactions_Joined.c.dest_alpha_code == bindparam("orig_code"))
+                         .where(Transactions_Joined.c.orig_alpha_code == bindparam("orig_code"))
                           .order_by(desc(Transactions_Joined.c.SHIPMT_VALUE)))
 
 

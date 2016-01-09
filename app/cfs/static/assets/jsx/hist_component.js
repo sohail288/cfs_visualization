@@ -46,8 +46,13 @@ hist_component.update = function(el, props, state) {
                 .data(data);
 
     // update
-    barBound.attr("transform", (d) => "translate("+x(d.x)+","+y(d.y)+")");
-    barBound.select("rect").attr("x", 1)
+    barBound.transition().duration(500)
+        .attr("transform", (d) => "translate("+x(d.x)+","+y(d.y)+")");
+
+    barBound.select("rect")
+            .transition()
+        .duration(500)
+        .attr("x", 1)
         .attr("width", x(data[0].dx) - 1)
         .attr("height", (d) => state.height- y(d.y));
 
@@ -75,7 +80,7 @@ hist_component.update = function(el, props, state) {
             .attr("text-anchor", "middle")
             .text((d)=>d.y);
 
-    // see if the axis exists already
+    // see if the axis exists already don't add the axis
     if (svg.select(".x")[0][0] === null) {
         svg.append("g")
             .attr("class", "x axis")
