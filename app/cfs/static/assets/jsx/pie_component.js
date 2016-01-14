@@ -46,7 +46,7 @@ pieChart.update = function(el, props, state) {
 
     var svg = d3.select(el).select("svg").select("g").select("g");
 
-    svg.selectAll(".arc").remove();
+//    svg.selectAll(".arc").remove();
 
     var radius = Math.min(width, height) / 2;
 
@@ -73,29 +73,52 @@ pieChart.update = function(el, props, state) {
     var g = svg.selectAll(".arc")
                 .data(pieChart(data));
 
-    var update_elems = g.attr("id", (d)=>d.data.Description)
+
+
+    console.warn(g);
+    console.warn(arc);
+
+    
+    var update_elems =  g 
+                        .select("path")
                         .transition()
                         .duration(1000)
-                        .ease("linear")
                         .attr("d", arc)
                         .style("fill", (d)=>color(d.data.code));
 
+    //update the descriptions
+    g.attr("id", (d)=>d.data.Description);
+
+    g.select("text").style("stroke", "silver")
+        .transition().duration(1000) 
+        .attr("transform", (d)=>"translate("+labelArc.centroid(d)+")")
+        .style("stroke", "black")
+        .text((d)=>d.data.Description);
+
+    // append
     var enter = g.enter()
                   .append("g")
                .attr("class", "arc")
                .attr("id", (d)=>d.data.Description);
 
+
     enter.append("path")
-     .attr("d", arc)
-        // the pie function placed the data into the data member
+     .style("stroke", "white")
+    .style("fill", "white")
+        .transition()
+        .duration(1000)
+        // the pie function placed the data into the data member of d
      .style("fill", (d)=>color(d.data.code))
-     .style("stroke", "white");
+     .attr("d", arc);
 
     enter.append("text")
         .attr("transform", (d)=>"translate("+labelArc.centroid(d)+")")
         .attr("dy", ".8px")
         .attr("class", "pie-label")
         .text((d)=>d.data.Description);
+
+
+    g.exit().remove();
 }
 
 

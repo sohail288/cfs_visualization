@@ -23,7 +23,7 @@ hist_component.update = function(el, props, state) {
 
     var svg = d3.select(el).select("svg g");
 
-    var tickformat = d3.format("^.1e");
+    var tickformat = d3.format("^.2");
     
     var x = d3.scale.linear()
               .domain(d3.extent(state.data))
@@ -71,6 +71,7 @@ hist_component.update = function(el, props, state) {
     //append
     var barEnter = barBound.enter().append("g")
                 .attr("class", "bar")
+    // the bars should come from the bottom of histogram to their respective heights
                 .attr("transform", (d) => "translate("+x(d.x)+","+state.height+")");
     barEnter.append("rect")
                 .transition()
@@ -106,6 +107,7 @@ hist_component.update = function(el, props, state) {
 
 hist_component.clear = function(el) {
     d3.select(el).selectAll(".bar").remove();
+    d3.select(el).select(".x").remove();
 
 }
 
