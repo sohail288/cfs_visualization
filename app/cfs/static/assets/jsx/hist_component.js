@@ -50,13 +50,17 @@ hist_component.update = function(el, props, state) {
         .attr("transform", (d) => "translate("+x(d.x)+","+y(d.y)+")");
 
     barBound.select("rect")
+            .attr("height", function(d) {
+                var curHeight = parseInt($(this).attr('height'));
+                console.log("current height", curHeight);
+                return isNaN(curHeight) ? 0: curHeight;
+            })
             .transition()
         .duration(500)
         .attr("x", 1)
         .attr("width", x(data[0].dx) - 1)
         .attr("height", (d) => state.height- y(d.y));
 
-    console.log("barbound", barBound);
     barBound.select("text")
             .attr("dy", ".75em")
             .attr("y", 6)
@@ -67,8 +71,11 @@ hist_component.update = function(el, props, state) {
     //append
     var barEnter = barBound.enter().append("g")
                 .attr("class", "bar")
-                .attr("transform", (d) => "translate("+x(d.x)+","+y(d.y)+")");
+                .attr("transform", (d) => "translate("+x(d.x)+","+state.height+")");
     barEnter.append("rect")
+                .transition()
+            .duration(250)
+                .attr("transform", (d) => "translate("+x(d.x)+","+y(d.y)+")")
             .attr("x", 1)
             .attr("width", x(data[0].dx) -1)
             .attr("height", (d) => state.width - y(d.y));
@@ -79,6 +86,10 @@ hist_component.update = function(el, props, state) {
             .attr("x", x(data[0].dx)/2)
             .attr("text-anchor", "middle")
             .text((d)=>d.y);
+
+    // remove the ones that should be gone.
+    barBound.exit().selectAll(".rect").attr("height", 0);
+    barBound.exit().transition().duration(250).remove();
 
     // see if the axis exists already don't add the axis
     if (svg.select(".x")[0][0] === null) {

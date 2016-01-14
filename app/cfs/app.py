@@ -19,10 +19,9 @@ import pandas as pd
 import queries
 from db import ENGINE, get_rows
 
-QUERY_LIMIT = QL = 100
+QUERY_LIMIT = QL = 100 
 
 app = Flask(__name__)
-
 
 app.config.from_object(__name__)
 app.config.from_envvar("CFS_SETTINGS", silent=True)

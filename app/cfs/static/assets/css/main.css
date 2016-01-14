@@ -87,3 +87,7 @@ path.domain {
     stroke-width: 1;
     stroke: black;
 }
+
+.Histogram .tick line {
+    stroke: black;
+}
