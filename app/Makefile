@@ -30,6 +30,8 @@ subunits_shp=$(subst zip,shp, $(subunits_file))
 # AWS DEPLOY SETTINGS
 ####################
 EC2_AMI=ami-d5ea86b5
+KEY_PAIR_NAME="cfs-key"
+
 
 
 
@@ -74,7 +76,7 @@ cfs/static/assets/geo/$(subunits_base).json:
 deploy:
 	@echo Deploying app
 	@echo EC2: $(EC2_AMI)
-	@echo 
+	
 
 
 
