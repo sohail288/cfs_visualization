@@ -27,6 +27,8 @@ module.exports = React.createClass({
                   naicsData:      [],
                   shipmentValueData:   [],
                   weightData: [],
+                  quarterData: [],
+                  hazmatData:  [],
             };
       },
         
@@ -95,11 +97,50 @@ module.exports = React.createClass({
             });
         }, 
 
+        getQuarterData: function() {
+            var suffix = this.state.current_state.join("/");
+            var url = this.props.get_data_url+suffix+"/info/QUARTER/counts";
+            $.ajax({
+                url: url,
+                dataType: 'json',
+                cache: false,
+                success: function(data) {
+                    this.setState({quarterData: data});
+                }.bind(this),
+            });
+        },
+
+        getHazmatData: function() {
+            var suffix = this.state.current_state.join("/");
+            var url    = this.props.get_data_url+suffix+"/info/HAZMAT/counts";
+            $.ajax({
+                url: url,
+                dataType: 'json',
+                cache: false,
+                success: function(data) {
+                    this.setState({hazmatData: data});
+                }.bind(this),
+            });
+        },
+
         
         componentDidMount: function() {
             this.updateStateData();
             this.getAllData();
             
+        },
+
+        getShipmentValueData: function () {
+            var values = !this.state.data.length ? [] : this.state.data.map((d)=>d.SHIPMT_VALUE);
+            this.setState({shipmentValueData: values});
+                
+
+        },
+
+        getWeightData: function () {
+            weights = !this.state.data.length ? [] : this.state.data.map((d)=>d.SHIPMT_WGHT);
+            this.setState({weightData: weights});
+
         },
 
 
@@ -112,6 +153,8 @@ module.exports = React.createClass({
             this.getSCTGData();
             this.getNAICSData();
             this.getMODEData();
+            this.getQuarterData();
+            this.getHazmatData();
 
         },
 
@@ -144,28 +187,13 @@ module.exports = React.createClass({
                 naicsData: [],
                 shipmentValueData: [],
                 weightData: [],
+                quarterData: [],
+                hazmatData:  [],
             });
 
         },
 
-        getShipmentValueData: function () {
-            var values = !this.state.data.length ? [] : this.state.data.map((d)=>d.SHIPMT_VALUE);
-            this.setState({shipmentValueData: values});
-            console.log(this.state.shipmentValueData);
-            console.log(this.state);
-                
 
-        },
-
-        getWeightData: function () {
-            weights = !this.state.data.length ? [] : this.state.data.map((d)=>d.SHIPMT_WGHT);
-            this.setState({weightData: weights});
-
-        },
-
-        
-
-        
 
         render: function() {
             //console.log(this.state);
@@ -191,6 +219,10 @@ module.exports = React.createClass({
                              title="MODE" />
                     <Pie     data    = { this.state.naicsData}
                              title="NAICS" />
+                    <Pie     data    = { this.state.quarterData}
+                             title="Quarter" />
+                    <Pie     data    = { this.state.hazmatData}
+                             title="HazMat" />
                               
                     
                 </section>

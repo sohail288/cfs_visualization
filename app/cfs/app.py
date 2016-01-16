@@ -13,6 +13,7 @@ from flask.ext.bootstrap  import Bootstrap
 from flask.ext.sqlalchemy import SQLAlchemy
 
 import json
+import re
 
 import pandas as pd
 
@@ -97,9 +98,41 @@ def  get_stats(orig_state, dest_state, info):
     return Response(data.to_json(orient="records"), mimetype='application/json',
                     headers={'Cache-Control': 'no-cache'})
 
-@app.route('/states/<orig_state>/<dest_state>/info/<info>/values')
-def get_values(orig_state, dest_state, info):
-    pass
+
+
+
+@app.route('/states/<orig_state>/info/<info>/counts')
+def get_counts_from_state(orig_state, info):
+    q = queries.transactionsFromState.params(orig_code=orig_state)
+
+    try:
+        data = pd.read_sql_query(q.limit(QL), ENGINE)[info].value_counts()
+        serialized = [{'code':str(k), 
+                       'Description': "{}_{}".format(info, str(k)),
+                       'counts': str(v)} for k,v in data.sort_index().to_dict().items()]
+    except Exception as e:
+        return Response(str(e) +" is not a correct column")
+
+    return Response(json.dumps(serialized, indent=2),
+                    mimetype="application/json",
+                    headers={'Cache-Control': 'no-cache'})
+                                        
+
+@app.route('/states/<orig_state>/<dest_state>/info/<info>/counts')
+def get_counts_between_state(orig_state, dest_state, info):
+    q = queries.transactionsBetweenStates.params(orig_code=orig_state, dest_code=dest_state)
+
+    try:
+        data = pd.read_sql_query(q.limit(QL), ENGINE)[info].value_counts()
+        serialized = [{'code':str(k),
+                       'Description': "{}_{}".format(info, str(k)),
+                       'counts':str(v)} for k,v in data.sort_index().to_dict().items()]
+    except Exception as e:
+        return Response(str(e) +" is not a correct column")
+
+    return Response(json.dumps(serialized, indent=2),
+                    mimetype="application/json",
+                    headers={'Cache-Control': 'no-cache'})
 
 
 
@@ -157,24 +190,23 @@ def get_breakdown_from_state(orig_state, info):
                     headers={'Cache-Control': 'no-cache'})
 
 
-
-@app.route('/appendix/<name>')
-def get_sctg_info(name):
-    s = { 'sctg': queries.SCTG,
-          'mode': queries.TransportMode,
-          'naics': queries.NAICS
-        }.get(name, None)
-
-    if s is not None:
-    
-        data = list(get_rows(g.db.execute(
-            queries.select([s])).fetchall()))
-
-        return Response(json.dumps(data, indent=2), 
-                        mimetype='application/json',
-                        headers={'Cache-Control': 'no-cache'})
-    return Response("table does not exist")
-
+#@app.route('/appendix/<name>')
+#def get_sctg_info(name):
+#    s = { 'sctg': queries.SCTG,
+#          'mode': queries.TransportMode,
+#          'naics': queries.NAICS
+#        }.get(name, None)
+#
+#    if s is not None:
+#    
+#        data = list(get_rows(g.db.execute(
+#            queries.select([s])).fetchall()))
+#
+#        return Response(json.dumps(data, indent=2), 
+#                        mimetype='application/json',
+#                        headers={'Cache-Control': 'no-cache'})
+#    return Response("table does not exist")
+#
                     
 
 

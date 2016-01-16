@@ -2,6 +2,15 @@
 
 var pieChart = {};
 
+
+
+idfy = function(id) {
+    return id.replace(/[^A-Za-z ]/g, '')
+             .trim().split(' ')
+             .filter((d)=>d !== '')
+             .join('-');
+}
+
 pieChart.create = function(el, props, state) {
 
     var margin = props.margins;
@@ -87,7 +96,7 @@ pieChart.update = function(el, props, state) {
                         .style("fill", (d)=>color(d.data.code));
 
     //update the descriptions
-    g.attr("id", (d)=>d.data.Description);
+    g.attr("id", (d)=>idfy(d.data.Description));
 
     g.select("text").style("stroke", "silver")
         .transition().duration(1000) 
@@ -99,7 +108,7 @@ pieChart.update = function(el, props, state) {
     var enter = g.enter()
                   .append("g")
                .attr("class", "arc")
-               .attr("id", (d)=>d.data.Description);
+               .attr("id", (d)=>idfy(d.data.Description));
 
 
     enter.append("path")

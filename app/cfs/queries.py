@@ -136,6 +136,5 @@ def getAux(col):
 
 def getValues(col):
     pass 
-    #return select([Transactions_Joined.c[col]]).from_select
 
 

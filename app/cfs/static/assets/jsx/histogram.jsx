@@ -18,8 +18,8 @@ module.exports = React.createClass({
         return {
             margins: {
                     top: 20,
-                    right: 20,
-                    bottom: 30,
+                    right: 30,
+                    bottom: 40,
                     left: 20
                     },
             height: 500,

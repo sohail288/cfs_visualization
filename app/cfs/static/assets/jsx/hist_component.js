@@ -1,6 +1,13 @@
 
 hist_component = {};
 
+idfy = function(id) {
+    return id.replace(/[^A-Za-z ]/g, '')
+             .trim().split(' ')
+             .filter((d)=>d !== '')
+             .join('-');
+}
+
 hist_component.create = function(el, props, state) {
     var margin = props.margins;
     var svg = d3.select(el).append('svg')
@@ -101,6 +108,11 @@ hist_component.update = function(el, props, state) {
     } else {
         svg.select(".x").attr("transform", "translate(0,"+state.height+")")
             .call(xAxis); 
+
+        svg.select(".x")
+           .selectAll("g")
+           .select("text")
+           .attr("transform", " translate(0,8) rotate(-20)");
     }
 
 }

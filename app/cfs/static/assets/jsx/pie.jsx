@@ -61,6 +61,7 @@ module.exports = React.createClass({
 
     render: function() {
         console.log("rendering pie");
+        console.log(this.props.data);
         return (
             <div className="Pie col-md-4"></div>
         );
