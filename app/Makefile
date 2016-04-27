@@ -48,9 +48,6 @@ usa.json: clean cfs/static/assets/geo/$(state_base).json cfs/static/assets/geo/$
 														$(DEST)/states.json
 	
 
-debugify:
-	@echo /$(subunits_shp)
-	@echo $(DEST)/$(subunits_base).shp
 
 cfs/static/assets/geo/$(state_base).json:
 	wget $(state_lines_url)
@@ -77,11 +74,12 @@ deploy:
 	@echo Deploying app
 	@echo EC2: $(EC2_AMI)
 	
-
-
-
 clean:
 	rm -f $(wildcard $(state_base).*)
 	rm -f $(wildcard $(place_base).*)
 	rm -f $(wildcard $(subunits_base).*)
+
+debugify:
+	@echo /$(subunits_shp)
+	@echo $(DEST)/$(subunits_base).shp
 

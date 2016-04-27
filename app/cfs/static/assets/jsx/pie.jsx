@@ -42,6 +42,26 @@ module.exports = React.createClass({
 
     },
 
+    shouldComponentUpdate: function(nextProps, nextState) {
+        var scu = false;
+        var newkeys = Object.keys(nextProps.data);
+        console.info(Object.keys(nextProps.data));
+        console.info(nextProps.data);
+
+        if (!nextProps.data.length) {
+            return true;
+        }
+
+        newkeys.forEach(function(k,i) {
+            
+            if (nextProps.data[k] !== this.props.data[k]) {
+                scu = true;
+            }
+        }.bind(this));
+
+        return scu;
+    },
+
     getPieState: function () {
        return {
             radius: Math.min(this.props.width, this.props.height) / 2,
@@ -49,6 +69,7 @@ module.exports = React.createClass({
 
         }
     },
+
 
 
     componentWillUnmount: function() {

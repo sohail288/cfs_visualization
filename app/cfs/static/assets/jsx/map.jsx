@@ -10,7 +10,9 @@ var d3Component = require('./d3_component.js');
 module.exports = React.createClass({
   propTypes: {
     data: React.PropTypes.array,
+    chloropethType: React.PropTypes.string,
   },
+
   getDefaultProps : function() {
         return  {
           width: 900,
@@ -40,7 +42,8 @@ module.exports = React.createClass({
   getMapState: function() {
     return {
       data: this.props.data,
-      currentState: this.props.current_state
+      currentState: this.props.current_state,
+      chloropethType: this.props.chloropethType,
     };
   },
 

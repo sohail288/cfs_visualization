@@ -1,8 +1,12 @@
 // d3Chart.js
-//https://github.com/nicolashery/example-d3-react/tree/master/src
 
 var d3Chart = {};
 var topojson=require("topojson");
+
+var chloropethRanges = {
+    'hazmat': ['white', 'orange'],
+    'number of shipments': ['white', 'blue'],
+}
 
 
 d3Chart.create = function(el, props, state) {
@@ -64,7 +68,6 @@ d3Chart._drawMap = function(el, props, state, svg) {
         //create mouse over event for changing the current state api
         d3Chart._addClickableState(el, props);
 
-             
     });
 }
 
@@ -72,6 +75,7 @@ d3Chart.update = function(el, props, state) {
     //console.log(state);
     d3Chart._addTransactionLines(el, props, state);
     d3Chart._highlightStates(el, state);
+    
 }    
 
 d3Chart.clear = function() {
@@ -81,9 +85,30 @@ d3Chart.clear = function() {
     // remove transaction lines
     d3.selectAll(".transaction-lines").remove();
     
-
 }
 
+d3Chart._addChloropeth = function(el, props, state) {
+    var allStates = d3.select(el).selectAll('.state');
+    var chloropethType = state.chloropethType;
+    var chloropethData = state.chloropethData;
+
+    var sel = d3.select(el).select('svg').selectAll(".state");
+
+    var dataExtent = d3.extent(chloropethData.map((d) => d.quantity));
+    
+
+    var color = d3.scale.linear()
+            .domain(dataExtent)
+            .range(chloropethRanges[chloropethType]);
+
+//    allStates.attr("fill", function(d,i) {
+//        
+//    
+//    });
+}
+
+
+// I don't know how this works anymore...
 d3Chart._addClickableState = function(el, props) {
     var sel = d3.select(el).select('svg').selectAll(".state");
 
@@ -124,6 +149,10 @@ d3Chart._addTransactionLines = function(el, props, state) {
 
     var getTransactions = function (data) {
         var curData = data; 
+        
+        // return a closure that takes in a state
+        // and returns the number of transactions that are
+        // between itself and other states
         return (d)=> curData.filter((d2) => d.ORIG_STATE==d2.ORIG_STATE && d.DEST_STATE == d2.DEST_STATE).length;
     };
 
@@ -161,15 +190,13 @@ d3Chart._addTransactionLines = function(el, props, state) {
     .enter()
       .append("circle")
         .attr('class', 'transaction-lines')
-                                                        // this is for jitter
-        .attr('cx', (d)=> props.projection(getPointA(d))[0]+Math.random()*10)
-        .attr('cy', (d)=> props.projection(getPointA(d))[1]+Math.random()*10)
+                                                        // addf jitter
+        .attr('cx', (d) => props.projection(getPointA(d))[0]+Math.random()*10)
+        .attr('cy', (d) => props.projection(getPointA(d))[1]+Math.random()*10)
         .attr('r', 3)
         .style('stroke', 'yellow')
         .style('fill', 'red');
        
-
-
 };
 
 d3Chart.destroy = function(el) {
@@ -191,7 +218,6 @@ d3Chart._showStateLabels = function (el, data, props ) {
                 })
             .attr("dy", ".35em")
             .text((d)=>d.properties['state-name']);
-
 }
 
 

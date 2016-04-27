@@ -20,6 +20,8 @@ import pandas as pd
 import queries
 from db import ENGINE, get_rows
 
+# this is used as a safety measure.  It can be removed to 
+# fetch all data
 QUERY_LIMIT = QL = 100 
 
 app = Flask(__name__)
@@ -51,6 +53,8 @@ def teardown_request(exception):
 app.add_url_rule('/usa-map-data', 'root', 
                  lambda: app.send_static_file('assets/geo/usa.json'))
 
+# index
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -65,6 +69,8 @@ def test_data():
     return Response(json.dumps(data), mimetype='application/json',
         headers={'Cache-Control': 'no-cache'})
 
+
+# data requests
 
 @app.route('/states/<orig_state>/<dest_state>')
 def transactionBetweenStates(orig_state, dest_state):
@@ -188,6 +194,14 @@ def get_breakdown_from_state(orig_state, info):
     return Response(m.to_json(orient="records"),
                     mimetype='application/json',
                     headers={'Cache-Control': 'no-cache'})
+
+@app.route('/chloro/<info>')
+def get_chloropeth_data(info):
+    data = None
+     
+    return Response(data.to_json(orient="records"),
+                    mimetype='application/json',
+                    headers={'Cache-Control': 'no-cache'}) 
 
 
 #@app.route('/appendix/<name>')

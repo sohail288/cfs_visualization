@@ -15,12 +15,15 @@ var Histogram = require('./histogram.jsx');
 module.exports = React.createClass({
         propTypes: {
             showStateLabels: React.PropTypes.bool,
+            chloroOptions:   React.PropTypes.array,
         },
 
         getInitialState: function() {
             return {
                   data: [],
                   showStateLabels: false,
+                  chloropethActive: false,
+                  chloropethType:     "",
                   current_state: ['KS'],
                   scgtData:       [],
                   modeData:       [],
@@ -57,73 +60,24 @@ module.exports = React.createClass({
             });
         },
 
-        getSCTGData: function() {
+
+        getData: function(ep_url, data_name) {
             var suffix = this.state.current_state.join("/");
-            var url = this.props.get_data_url+ suffix+"/info/SCTG/break_down";
-            //console.log(url);
+            var url    = this.props.get_data_url+suffix+ep_url;
+            var newstate = {};
             $.ajax({
                 url: url,
                 dataType: 'json',
-                cache: false,
+                cache: true,
                 success: function(data) {
-                    this.setState({scgtData: data});
+                    newstate[data_name] = data;
+                    this.setState(newstate);
                 }.bind(this),
             });
         },
 
-        getMODEData: function() {
-            var suffix = this.state.current_state.join("/");
-            var url = this.props.get_data_url+suffix+"/info/MODE/break_down";
-            $.ajax({
-                url: url,
-                dataType: 'json',
-                cache: false,
-                success: function(data) {
-                    this.setState({modeData: data});
-                }.bind(this),
-            });
-        }, 
-        
-        getNAICSData: function() {
-            var suffix = this.state.current_state.join("/");
-            var url = this.props.get_data_url+suffix+"/info/NAICS/break_down";
-            $.ajax({
-                url: url,
-                dataType: 'json',
-                cache: false,
-                success: function(data) {
-                    this.setState({naicsData: data});
-                }.bind(this),
-            });
-        }, 
 
-        getQuarterData: function() {
-            var suffix = this.state.current_state.join("/");
-            var url = this.props.get_data_url+suffix+"/info/QUARTER/counts";
-            $.ajax({
-                url: url,
-                dataType: 'json',
-                cache: false,
-                success: function(data) {
-                    this.setState({quarterData: data});
-                }.bind(this),
-            });
-        },
 
-        getHazmatData: function() {
-            var suffix = this.state.current_state.join("/");
-            var url    = this.props.get_data_url+suffix+"/info/HAZMAT/counts";
-            $.ajax({
-                url: url,
-                dataType: 'json',
-                cache: false,
-                success: function(data) {
-                    this.setState({hazmatData: data});
-                }.bind(this),
-            });
-        },
-
-        
         componentDidMount: function() {
             this.updateStateData();
             this.getAllData();
@@ -150,16 +104,15 @@ module.exports = React.createClass({
 
         getAllData: function() {
 
-            this.getSCTGData();
-            this.getNAICSData();
-            this.getMODEData();
-            this.getQuarterData();
-            this.getHazmatData();
+            this.getData('/info/SCTG/break_down', 'scgtData');
+            this.getData('/info/NAICS/break_down', 'naicsData');
+            this.getData('/info/MODE/break_down', 'modeData');
+            this.getData('/info/QUARTER/counts', 'quarterData');
+            this.getData('/info/HAZMAT/counts', 'hazmatData'); 
 
         },
 
         handleStateSelect: function(new_state) {
-            //console.log("In handle state with args: ", new_state);
         
             // if the user selected 2 states already clear the selection
             // and add a new state in
@@ -169,30 +122,27 @@ module.exports = React.createClass({
                 this.state.current_state.push(new_state);
             }
                 
-            //console.log(this.state);
             this.updateStateData();
 
-//            if (this.state.current_state.length === 2) {
-                this.getAllData();
- //           }
+            this.getAllData();
         },
 
         handleClear: function() {
             //console.log("Handling clear");
-            this.replaceState({
-                data: [],
-                current_state: [],
-                scgtData: [],
-                modeData: [],
-                naicsData: [],
-                shipmentValueData: [],
-                weightData: [],
-                quarterData: [],
-                hazmatData:  [],
-            });
+            var init_state = this.getInitialState();
+            init_state['current_state'] = [];
+            this.replaceState(init_state);
 
         },
 
+        handleChloropethSelect: function(option) {
+            if (option !== this.state.chloropethType) {
+                this.setState({
+                    chloropethType: option,
+                    chloropethActive: true,
+                });
+            }
+        },
 
 
         render: function() {
@@ -200,7 +150,10 @@ module.exports = React.createClass({
             return (
                 <div className="container">
                 <div className='row' id="toolbar">
-                    <ToolBar handleClear={this.handleClear} />
+                    <ToolBar handleClear={this.handleClear} 
+                             handleChloropethSelect={this.handleChloropethSelect}
+                             chloroOptions={this.props.chloroOptions}
+                    />
                 </div>
                 <div className="row">
                     <section id="chart" className="col-md-12">
@@ -208,30 +161,39 @@ module.exports = React.createClass({
                              data={this.state.data} 
                             current_state={this.state.current_state}
                             handle_state={this.handleStateSelect}
+                            chloropethType={this.state.chloropethType}
                         />
                     </section>
                 </div>
                 <section id="pie-chart" className="row">
 
                     <Pie     data    = {this.state.scgtData}
+                             current_state = {this.state.current_state}
                              title="SCTG" />
                     <Pie     data    = { this.state.modeData}
+                             current_state = {this.state.current_state}
                              title="MODE" />
                     <Pie     data    = { this.state.naicsData}
+                             current_state = {this.state.current_state}
                              title="NAICS" />
                     <Pie     data    = { this.state.quarterData}
+                             current_state = {this.state.current_state}
                              title="Quarter" />
                     <Pie     data    = { this.state.hazmatData}
+                             current_state = {this.state.current_state}
                              title="HazMat" />
                               
                     
                 </section>
+
                 <section id="histograms" className="row">
 
                     <Histogram  data = {this.state.shipmentValueData}
+                                width={500}
                                 title="Values" />
 
                     <Histogram  data = {this.state.weightData}
+                                width={500}
                                 title="Weights" />
                         
                 </section>
